@@ -16,6 +16,7 @@
 * [hoistPatternLet](#hoistPatternLet)
 * [indent](#indent)
 * [isEmpty](#isEmpty)
+* [isPopulated](#isPopulated)
 * [leadingDelimiters](#leadingDelimiters)
 * [linebreakAtEndOfFile](#linebreakAtEndOfFile)
 * [linebreaks](#linebreaks)
@@ -550,6 +551,10 @@ reason, the rule is disabled by default, and must be manually enabled via the
 
 </details>
 <br/>
+
+## isPopulated
+
+Prefer `isPopulated` over comparing `isEmpty == false`.
 
 ## leadingDelimiters
 

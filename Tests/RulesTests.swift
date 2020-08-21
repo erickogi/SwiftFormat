@@ -11133,6 +11133,70 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.isEmpty)
     }
 
+    // MARK: - isPopulated
+
+    func testIsPopulated() {
+        let input = "if array.isEmpty == false {}"
+        let output = "if array.isPopulated {}"
+        testFormatting(for: input, output, rule: FormatRules.isPopulated)
+    }
+
+    func testFunctionIsPopulated() {
+        let input = "if foo().isEmpty == false {}"
+        let output = "if foo().isPopulated {}"
+        testFormatting(for: input, output, rule: FormatRules.isPopulated)
+    }
+
+    func testExpressionIsPopulated() {
+        let input = "if foo || bar.isEmpty == false {}"
+        let output = "if foo || bar.isPopulated {}"
+        testFormatting(for: input, output, rule: FormatRules.isPopulated)
+    }
+
+    func testCompoundIfIsPopulated() {
+        let input = "if foo, bar.isEmpty == false {}"
+        let output = "if foo, bar.isPopulated {}"
+        testFormatting(for: input, output, rule: FormatRules.isPopulated)
+    }
+
+    func testOptionalIsPopulated() {
+        let input = "if foo?.isEmpty == false {}"
+        let output = "if foo?.isPopulated == true {}"
+        testFormatting(for: input, output, rule: FormatRules.isPopulated)
+    }
+
+    func testOptionalChainIsPopulated() {
+        let input = "if foo?.bar.isEmpty == false {}"
+        let output = "if foo?.bar.isPopulated == true {}"
+        testFormatting(for: input, output, rule: FormatRules.isPopulated)
+    }
+
+    func testCompoundIfOptionalIsPopulated() {
+        let input = "if foo, bar?.isEmpty == false {}"
+        let output = "if foo, bar?.isPopulated == true {}"
+        testFormatting(for: input, output, rule: FormatRules.isPopulated)
+    }
+
+    func testStatementsAreNotDiscarded() {
+        let input = "foo == nil || bar?.isEmpty == true, cat.isEmpty == false"
+        let output = "foo == nil || bar?.isEmpty == true, cat.isPopulated"
+        testFormatting(for: input, output, rule: FormatRules.isPopulated)
+
+        let input1 = "foo == nil || cat.isEmpty == false, bar?.isEmpty == true"
+        let output1 = "foo == nil || cat.isPopulated, bar?.isEmpty == true"
+        testFormatting(for: input1, output1, rule: FormatRules.isPopulated)
+
+        let input2 = "param: foo.isEmpty ? condition1() : other, param1: bar, foo.isEmpty == false, isSomething: false,"
+        let output2 = "param: foo.isEmpty ? condition1() : other, param1: bar, foo.isPopulated, isSomething: false,"
+        testFormatting(for: input2, output2, rule: FormatRules.isPopulated)
+    }
+
+    func testTernaryIsPopulated() {
+        let input = "foo ? bar.isEmpty == false : baz.isEmpty == false"
+        let output = "foo ? bar.isPopulated : baz.isPopulated"
+        testFormatting(for: input, output, rule: FormatRules.isPopulated)
+    }
+
     // MARK: - redundantLetError
 
     func testCatchLetError() {

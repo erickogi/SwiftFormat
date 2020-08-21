@@ -4043,6 +4043,73 @@ public struct _FormatRules {
         }
     }
 
+    /// Replace `isEmpty == false` with `isPopulated`
+    public let isPopulated = FormatRule(
+        help: "Prefer `isPopulated` over comparing `isEmpty == false`."
+    ) { formatter in
+        formatter.forEach(.identifier("isEmpty")) { i, _ in
+            guard let dotIndex = formatter.index(of: .nonSpaceOrLinebreak, before: i, if: {
+                $0.isOperator(".")
+            }), let opIndex = formatter.index(of: .nonSpaceOrLinebreak, after: i, if: {
+                $0.isOperator("==")
+            }), let endToken = formatter.nextToken(after: opIndex, where: { token -> Bool in
+                token == .identifier("false")
+            }), let endIndex = formatter.index(of: endToken, before: opIndex + 6) else {
+                return
+            }
+            var isOptional = false
+            var index = dotIndex
+            var wasIdentifier = false
+            loop: while true {
+                guard let prev = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: index) else {
+                    break
+                }
+                switch formatter.tokens[prev] {
+                case .operator("!", _), .operator(".", _):
+                    break // Ignored
+                case .operator("?", _):
+                    if formatter.tokens[prev - 1].isSpace {
+                        break loop
+                    }
+                    isOptional = true
+                case let .operator(op, .infix):
+                    guard ["||", "&&", ":"].contains(op) else {
+                        return
+                    }
+                    break loop
+                case .keyword, .delimiter, .startOfScope:
+                    break loop
+                case .identifier:
+                    if wasIdentifier {
+                        break loop
+                    }
+                    wasIdentifier = true
+                    index = prev
+                    continue
+                case .endOfScope:
+                    guard !wasIdentifier, let start = formatter.index(of: .startOfScope, before: prev) else {
+                        break loop
+                    }
+                    wasIdentifier = false
+                    index = start
+                    continue
+                default:
+                    break
+                }
+                wasIdentifier = false
+                index = prev
+            }
+
+            if isOptional {
+                formatter.replaceTokens(inRange: i ... endIndex, with: [
+                    .identifier("isPopulated"), .space(" "), .operator("==", .infix), .space(" "), .identifier("true"),
+                ])
+            } else {
+                formatter.replaceTokens(inRange: i ... endIndex, with: [.identifier("isPopulated")])
+            }
+        }
+    }
+
     /// Remove redundant `let error` from `catch` statements
     public let redundantLetError = FormatRule(
         help: "Remove redundant `let error` from `catch` clause."
